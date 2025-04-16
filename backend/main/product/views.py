@@ -12,11 +12,15 @@ class ProductCategoryListAPIView(APIView):
     serializer = ProductCategorySerializer(categories, many = True)
     return Response(serializer.data, status=status.HTTP_200_OK)
   
-  
+
 # API View for listing all products
 class ProductListAPIView(APIView):
   def get(self, request):
-    products = Product.objects.all()
+    products = Product.objects.prefetch_related(
+      'items__color',
+      'items__images',
+      'items__variations__size'
+    ).all()
     serializer = ProductSerializer(products, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
