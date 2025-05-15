@@ -91,6 +91,19 @@ class ProductVariation(models.Model):
    
    def __str__(self):
         return f"{self.product_item} - {self.size.size_name}"
+
+
+class ProductDetails(models.Model):
+   product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name='detail')
+   product_details = models.TextField(blank=True, null=True)
+   size_and_fit = models.TextField(blank=True, null=True)
+   material_and_care = models.TextField(blank=True, null=True)
+   specifications = models.JSONField(blank=True, null=True)
+
+   def __str__(self):
+       return f"Details for {self.product.product_name}"
+   
+
    
    
 
