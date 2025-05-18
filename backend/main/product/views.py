@@ -1,9 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Prefetch
+from rest_framework.pagination import LimitOffsetPagination
 from .models import ProductCategory, Product, ProductItem, ProductVariation
 from .serializers import ProductCategorySerializer, ProductWithFirstItemSerializer,ProductDetailSerializer
-from django.db.models import Prefetch
+
 
 
 # API View for listing all product categories
@@ -25,8 +27,10 @@ class ProductListAPIView(APIView):
         to_attr='first_item'
       )
     ).all()
-    serializer = ProductWithFirstItemSerializer(products, many=True, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    paginator = LimitOffsetPagination()
+    paginated_products = paginator.paginate_queryset(products, request, view=self)
+    serializer = ProductWithFirstItemSerializer(paginated_products, many=True, context={'request': request})
+    return paginator.get_paginated_response(serializer.data)
   
 #API view for getting product details with id in the product detail page
 class ProductDetailAPIView(APIView):
