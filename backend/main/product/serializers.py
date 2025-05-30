@@ -42,7 +42,6 @@ class ProductVariationSerializer(serializers.ModelSerializer):
         model = ProductVariation
         fields = ['id', 'size', 'quantity_in_stock']
 
-
 #serializer for product Item
 class ProductItemSerializer(serializers.ModelSerializer):
   color = serializers.CharField(source='color.color_name')
@@ -72,19 +71,17 @@ class ProductWithFirstItemSerializer(serializers.ModelSerializer):
             return ProductItemSerializer(obj.first_item[0], context=self.context).data
         return None
  
-
-
 #serializer for product details(additional details of the product)
 class ProductDetailContentSerializer(serializers.ModelSerializer):
   class Meta:
     model = ProductDetails
-    fields = ['product_details', 'size_and_fit', 'material_and_care', 'specifications']
-
+    fields = ['product', 'size_and_fit', 'material_and_care', 'specifications']
 
 #serializer for showing the color options and image of a related products in detail page
 class ProductItemColorOptionSerializer(serializers.ModelSerializer):
   color = serializers.CharField(source='color.color_name')
   main_image = serializers.SerializerMethodField()
+  id = serializers.IntegerField()
 
   class Meta:
     model = ProductItem
@@ -97,22 +94,35 @@ class ProductItemColorOptionSerializer(serializers.ModelSerializer):
       return request.build_absolute_uri(main_image.image.url)
     return None
 
-#serializer for product details, which showing in the detail page of product.
-class ProductDetailSerializer(serializers.ModelSerializer):
-  product_category = ProductCategorySerializer()
-  details = ProductItemSerializer(source='items', many=True)
-  additional_info = ProductDetailContentSerializer(source='detail', read_only=True)
-  color_options = serializers.SerializerMethodField()
+#serializer for productitem details, which showing in the detail page of product.
+class ProductItemDetailSerializer(serializers.ModelSerializer):
+  product_id = serializers.IntegerField(source='product.id')
+  product_name = serializers.CharField(source='product.product_name')
+  product_description = serializers.CharField(source='product.product_description')
+  product_category = serializers.CharField(source='product.product_category.category_name')
+  color = serializers.CharField(source='color.color_name')
+  images = ProductImageSerializer(many=True, read_only=True)
+  variations = ProductVariationSerializer(many=True, read_only=True)
+  product_detail = serializers.SerializerMethodField()
+  related_items = serializers.SerializerMethodField()
 
   class Meta:
-    model = Product
-    fields = ['id', 'product_name', 'product_description', 'product_category', 'details', 'additional_info', 'color_options']
-  
-  def get_color_options(self, obj):
-    items = obj.items.all()
-    serializer = ProductItemColorOptionSerializer(items, many=True, context=self.context)
-    return serializer.data
+    model = ProductItem
+    fields = [
+      'id', 'product_id', 'product_name', 'product_description', 'product_category', 'original_price', 
+      'sale_price', 'color', 'images', 'variations', 'product_detail', 'related_items'
+    ]
 
+  def get_product_detail(self, obj): #extra details of product items
+    try:
+      detail = obj.product.detail
+      return ProductDetailContentSerializer(detail).data
+    except ProductDetails.DoesNotExist:
+      return None
+  
+  def get_related_items(self, obj):
+    related_items = obj.product.items.exclude(id=obj.id)
+    return ProductItemColorOptionSerializer(related_items, many=True, context=self.context).data
 
 
 

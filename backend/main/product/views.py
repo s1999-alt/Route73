@@ -4,7 +4,7 @@ from rest_framework import status
 from django.db.models import Prefetch
 from rest_framework.pagination import LimitOffsetPagination
 from .models import ProductCategory, Product, ProductItem, ProductVariation
-from .serializers import ProductCategorySerializer, ProductWithFirstItemSerializer,ProductDetailSerializer
+from .serializers import ProductCategorySerializer, ProductWithFirstItemSerializer,ProductItemDetailSerializer
 
 
 
@@ -33,19 +33,24 @@ class ProductListAPIView(APIView):
     return paginator.get_paginated_response(serializer.data)
   
 #API view for getting product details with id in the product detail page
-class ProductDetailAPIView(APIView):
-  def get(self, request, id):
+class ProductItemDetailAPIView(APIView):
+  def get(self, request, item_id):
     try:
-      product = Product.objects.prefetch_related(
-        'items__color', 'items__images', 'items__variations__size',
-        'product_category__parent_category'
-      ).select_related('product_category', 'detail').get(id=id)
+      product_item = ProductItem.objects.select_related(
+        'product__product_category', 'color'
+      ).prefetch_related(
+        'images',
+        Prefetch('variations', queryset=ProductVariation.objects.select_related('size')),
+        Prefetch('product__items', queryset=ProductItem.objects.select_related('color').prefetch_related('images'))
+      ).get(id=item_id)
 
-      serializer = ProductDetailSerializer(product, context={'request': request})
+      serializer = ProductItemDetailSerializer(product_item, context={'request': request})
       return Response(serializer.data, status=status.HTTP_200_OK)
     
-    except Product.DoesNotExist:
-      return Response({'detail': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except ProductItem.DoesNotExist:
+      return Response({'detail': 'Product item not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 

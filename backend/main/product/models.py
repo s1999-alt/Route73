@@ -9,7 +9,6 @@ class SizeCategory(models.Model):
    def __str__(self):
        return self.category_name
    
-
 class SizeOption(models.Model):
    size_name = models.CharField(max_length=20, unique=True)
    sort_order = models.PositiveIntegerField(default=0)
@@ -21,7 +20,6 @@ class SizeOption(models.Model):
    def __str__(self):
        return f"{self.size_name} ({self.size_category.category_name})"
    
-
 class ProductCategory(models.Model):
   category_name = models.CharField(max_length=100, unique=True)
   category_description = models.TextField(blank=True, null=True)
@@ -32,7 +30,6 @@ class ProductCategory(models.Model):
   def __str__(self):
       return f"{self.category_name}"
 
-
 class Product(models.Model):
   product_name = models.CharField(max_length=150, unique=True)
   product_description = models.TextField(blank=True, null=True)
@@ -42,14 +39,12 @@ class Product(models.Model):
   def __str__(self):
       return self.product_name
   
-
 class Color(models.Model):
    color_name = models.CharField(max_length=50, unique=True)
 
    def __str__(self):
       return self.color_name
    
-
 class ProductItem(models.Model):
    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="items")
    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, related_name="items")
@@ -70,7 +65,6 @@ class ProductItem(models.Model):
    def __str__(self):
       return f"{self.product.product_name} - {self.color.color_name}"
    
-
 class ProductImage(models.Model):
    product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE, related_name='images')
    image = models.ImageField(upload_to="product_images/", null=True, blank=True)
@@ -79,8 +73,7 @@ class ProductImage(models.Model):
 
    def __str__(self):
        return f"Image for {self.product_item} - {'Main' if self.is_main else 'Secondary'}"
-   
-   
+    
 class ProductVariation(models.Model):
    product_item = models.ForeignKey(ProductItem, on_delete=models.CASCADE, related_name="variations")
    size = models.ForeignKey(SizeOption, on_delete=models.CASCADE, related_name='variations')
@@ -92,7 +85,6 @@ class ProductVariation(models.Model):
    def __str__(self):
         return f"{self.product_item} - {self.size.size_name}"
 
-
 class ProductDetails(models.Model):
    product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name='detail')
    product_details = models.TextField(blank=True, null=True)
@@ -102,6 +94,9 @@ class ProductDetails(models.Model):
 
    def __str__(self):
        return f"Details for {self.product.product_name}"
+   
+
+
    
 
    
