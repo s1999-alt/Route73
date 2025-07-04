@@ -60,16 +60,18 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
 #serializer for getting the first item from product item to show in the home page
 class ProductWithFirstItemSerializer(serializers.ModelSerializer):
-    first_item = serializers.SerializerMethodField()
+  product_name = serializers.CharField(source='product.product_name')
+  product_description = serializers.CharField(source='product.product_description', allow_null=True)
+  color = serializers.CharField(source='color.color_name')
+  images = ProductImageSerializer(many=True, read_only=True)
+  variations = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Product
-        fields = ['id', 'product_name', 'product_description', 'first_item']
+  class Meta:
+    model = ProductItem
+    fields = ['id', 'product_name', 'product_description', 'original_price', 'sale_price', 'color', 'images', 'variations', 'in_stock']
 
-    def get_first_item(self, obj):
-        if hasattr(obj, 'first_item') and obj.first_item:
-            return ProductItemSerializer(obj.first_item[0], context=self.context).data
-        return None
+  def get_variations(self, obj):
+      return [variation.size.size_name for variation in obj.variations.all()]
  
 #serializer for product details(additional details of the product)
 class ProductDetailContentSerializer(serializers.ModelSerializer):

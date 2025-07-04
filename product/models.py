@@ -51,6 +51,7 @@ class ProductItem(models.Model):
    original_price = models.DecimalField(max_digits=10, decimal_places=2)
    sale_price = models.DecimalField(max_digits=10, decimal_places=2)
    product_code = models.CharField(max_length=20, unique=True, blank=True)
+   in_stock =models.BooleanField(default=True)
    is_available =models.BooleanField(default=True)
    created_at = models.DateTimeField(auto_now_add=True)
 

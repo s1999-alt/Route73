@@ -15,7 +15,7 @@ class ProductCategoryListAPIView(APIView):
     serializer = ProductCategorySerializer(categories, many = True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-# API View for listing all products in the homepage
+# API View for listing all products first item in the shop page
 class ProductListAPIView(APIView):
   def get(self, request):
     products = Product.objects.prefetch_related(
@@ -27,8 +27,14 @@ class ProductListAPIView(APIView):
         to_attr='first_item'
       )
     ).all()
+    print("-------------------------------", products)
+
+    flattened_items = [
+      product.first_item[0] for product in products if hasattr(product, 'first_item') and product.first_item
+    ]
+
     paginator = LimitOffsetPagination()
-    paginated_products = paginator.paginate_queryset(products, request, view=self)
+    paginated_products = paginator.paginate_queryset(flattened_items, request, view=self)
     serializer = ProductWithFirstItemSerializer(paginated_products, many=True, context={'request': request})
     return paginator.get_paginated_response(serializer.data)
   
