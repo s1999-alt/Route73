@@ -30,6 +30,7 @@ class User(AbstractBaseUser, PermissionsMixin):
   is_active = models.BooleanField(default=True)
   is_staff = models.BooleanField(default=False)
   is_profile_completed = models.BooleanField(default=False)
+  is_mobile_verified = models.BooleanField(default=False)  # Added for OTP verification
   created_at = models.DateTimeField(auto_now_add=True)
 
   groups = models.ManyToManyField(Group, related_name="custom_user_groups", blank=True)
@@ -42,6 +43,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
   def __str__(self):
       return self.username if self.username else self.phone_number
+
+
+class OTPRequest(models.Model):
+    phone_number = models.CharField(max_length=15)
+    otp_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    attempt_count = models.PositiveIntegerField(default=0)
+    is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"OTP for {self.phone_number} ({'verified' if self.is_verified else 'pending'})"
 
 
 
