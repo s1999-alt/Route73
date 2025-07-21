@@ -7,6 +7,7 @@ from django.conf import settings
 from .models import User, OTPRequest
 from .utils import generate_and_send_otp
 from django.db import transaction
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # Rate limiting settings (simple, per phone number)
 OTP_REQUEST_LIMIT = 3  # per hour
@@ -70,4 +71,10 @@ class VerifyOTPAPIView(APIView):
             user = User.objects.get(phone_number=phone_number)
             user.is_mobile_verified = True
             user.save()
-        return Response({'detail': 'OTP verified successfully. Mobile number is now verified.'}, status=status.HTTP_200_OK)
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'detail': 'OTP verified successfully. Mobile number is now verified.',
+            'access': str(refresh.access_token),
+            'refresh': str(refresh)
+        }, status=status.HTTP_200_OK)
